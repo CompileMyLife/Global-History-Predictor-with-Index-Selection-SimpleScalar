@@ -3,4 +3,4 @@
 ## How To
 ## Benchmarks
 ## Reference
-* [WRL Technical Note TN-36:Combining Branch Predictors](docs/WRL_Technical_Note_TN-36_Combining-Branch-Predictors_Mcfarling), Scott McFarling, 1993
+* [WRL Technical Note TN-36:Combining Branch Predictors](docs/WRL_Technical_Note_TN-36_Combining-Branch-Predictors_Mcfarling.pdf), Scott McFarling, 1993
