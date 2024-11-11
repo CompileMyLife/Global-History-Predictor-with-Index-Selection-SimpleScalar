@@ -11,13 +11,12 @@ cmds = [
         simulator/Run.pl -db simulator/bench.db -dir simulator/results/gcc1
         -benchmark gcc -sim $HOME/workspace/ECE-587_Proj/simulator/ss3/sim-outorder
         -args "-fastfwd 1000000 -max:inst 1000000" >& simulator/results/gcc1_outorder.out
-         '''],
-
-        ['''
+         ''',
+         '''
         simulator/Run.pl -db simulator/bench.db -dir simulator/results/gcc1
         -benchmark gcc -sim $HOME/workspace/ECE-587_Proj/simulator/ss3/sim-outorder
         -args "-issue:inorder -fastfwd 1000000 -max:inst 1000000" >& simulator/results/gcc1_inorder.out
-        '''],
+        '''
         ]
 
 def log_command_and_output(cmd: str, stdout: str, stderr: str, log_filename: str) -> None: # Open a log file to store commands and outputs
@@ -31,16 +30,16 @@ def log_command_and_output(cmd: str, stdout: str, stderr: str, log_filename: str
 def run() -> None:
     log_filename = 'logs/command_logs.txt'  # Log file to store commands and outputs
     for cmd in cmds:
-         try: 
-            process = subp.run(cmd, shell=True, capture_output=True, text=True) # Run the command, capture stdout and stderr
+      try: 
+          process = subp.run(cmd, shell=True, capture_output=True, text=True) # Run the command, capture stdout and stderr
             log_command_and_output(cmd, process.stdout, process.stderr, log_filename) # Log the command and its output
 
             # Check the return code to determine success/failure
 
-        if process.returncode != 0:
+          if process.returncode != 0:
             print(f'ERROR: {process.stderr}')
 
-        else:
+          else:
             print(process.output)
 
 
