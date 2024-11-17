@@ -117,22 +117,29 @@ struct bpred_btb_ent_t {
 
 /* direction predictor def */
 struct bpred_dir_t {
-  enum bpred_class class;	/* type of predictor */
+  enum bpred_class class; /* type of predictor */
   union {
     struct {
-      unsigned int size;	/* number of entries in direct-mapped table */
-      unsigned char *table;	/* prediction state table */
+      unsigned int size;        /* size of the table */
+      unsigned char *table;     /* 2-bit saturating counters */
     } bimod;
     struct {
-      int l1size;		/* level-1 size, number of history regs */
-      int l2size;		/* level-2 size, number of pred states */
-      int shift_width;		/* amount of history in level-1 shift regs */
-      int xor;			/* history xor address flag */
-      int *shiftregs;		/* level-1 history table */
-      unsigned char *l2table;	/* level-2 prediction state table */
-    } two;
+      unsigned int l1size;      /* level-1 size (history register size) */
+      unsigned int l2size;      /* level-2 size (prediction table size) */
+      unsigned int shift_width; /* history register width */
+      unsigned int xor;         /* use XOR for history indexing */
+      int *shiftregs;           /* level-1 history table */
+      unsigned char *l2table;   /* level-2 prediction table */
+    } twolev;
+    struct {
+      unsigned int size;        /* gselect table size */
+      unsigned int history_bits; /* number of history bits */
+      unsigned int history;     /* global history register */
+      unsigned char *table;     /* prediction table */
+    } gselect;
   } config;
 };
+
 
 /* branch predictor def */
 struct bpred_t {
