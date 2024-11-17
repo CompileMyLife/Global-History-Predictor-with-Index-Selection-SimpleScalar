@@ -83,6 +83,14 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   pred->class = class;
 
   switch (class) {
+	  
+	  //ADDED GSELECT CODE
+	case BPredGSelect:
+	/* gselect component */
+		pred->dirpred.gselect =
+			bpred_dir_create(class, gselect_config[0], 0, gselect_config[1], gselect_config[2]);
+    break;
+	
   case BPredComb:
     /* bimodal component */
     pred->dirpred.bimod = 
@@ -196,6 +204,30 @@ bpred_dir_create (
 
   cnt = -1;
   switch (class) {
+	  
+	  //ADDED GSELECT CODE
+	case BPredGSelect:
+      // Validate gselect configuration
+      if (!l1size || (l1size & (l1size - 1)) != 0)
+        fatal("gselect table size must be non-zero and a power of two");
+      if (!shift_width || shift_width > 30)
+        fatal("history register width must be non-zero and <= 30");
+
+      // Allocate and initialize gselect components
+      pred_dir->config.gselect.size = l1size;
+      pred_dir->config.gselect.history_bits = shift_width;
+      pred_dir->config.gselect.history = 0; // Initialize global history to 0
+
+      pred_dir->config.gselect.table = calloc(l1size, sizeof(unsigned char));
+      if (!pred_dir->config.gselect.table)
+        fatal("cannot allocate gselect table");
+
+      // Initialize prediction table entries to weakly not-taken
+      for (unsigned int i = 0; i < l1size; i++) {
+        pred_dir->config.gselect.table[i] = 1; // Weakly not-taken
+      }
+      break;
+	  
   case BPred2Level:
     {
       if (!l1size || (l1size & (l1size-1)) != 0)
@@ -496,6 +528,24 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
 
   /* Except for jumps, get a pointer to direction-prediction bits */
   switch (pred_dir->class) {
+	  
+	  //ADDED GSELECT CODE
+	case BPredGSelect:
+      {
+        unsigned int index;
+
+        // Compute index using history and branch address
+        if (pred_dir->config.gselect.history_bits > 0) {
+          index = ((baddr >> MD_BR_SHIFT) & (pred_dir->config.gselect.size - 1))
+                  ^ (pred_dir->config.gselect.history & ((1 << pred_dir->config.gselect.history_bits) - 1));
+        } else {
+          index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.gselect.size - 1);
+        }
+
+        p = &pred_dir->config.gselect.table[index];
+      }
+      break;
+	  
     case BPred2Level:
       {
 	int l1index, l2index;
@@ -839,6 +889,33 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
       pred->dirpred.twolev->config.two.shiftregs[l1index] =
 	shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
     }
+	
+ // ADDED GSELECT CODE
+  if (pred->class == BPredGSelect) {
+      unsigned int gselect_index;
+      
+      // Compute the index
+      if (pred->dirpred.gselect.history_bits > 0) {
+          gselect_index = ((baddr >> MD_BR_SHIFT) & (pred->dirpred.gselect.size - 1)) ^
+                          (pred->dirpred.gselect.history & ((1 << pred->dirpred.gselect.history_bits) - 1));
+      } else {
+          gselect_index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.gselect.size - 1);
+      }
+
+      // Update prediction table
+      if (taken) {
+          if (pred->dirpred.gselect.table[gselect_index] < 3)
+              pred->dirpred.gselect.table[gselect_index]++;
+      } else {
+          if (pred->dirpred.gselect.table[gselect_index] > 0)
+              pred->dirpred.gselect.table[gselect_index]--;
+      }
+
+      // Update global history
+      pred->dirpred.gselect.history = ((pred->dirpred.gselect.history << 1) | !!taken) &
+                                      ((1 << pred->dirpred.gselect.history_bits) - 1);
+  }
+	
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
   if (taken)
