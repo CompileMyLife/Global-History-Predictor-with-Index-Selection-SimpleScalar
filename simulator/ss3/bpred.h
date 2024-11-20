@@ -127,7 +127,7 @@ struct bpred_dir_t {
       int l1size;		/* level-1 size, number of history regs */
       int l2size;		/* level-2 size, number of pred states */
       int shift_width;		/* amount of history in level-1 shift regs */
-      int xor;			/* history xor address flag */
+      int index_type;			/* history xor address flag */
       int *shiftregs;		/* level-1 history table */
       unsigned char *l2table;	/* level-2 prediction state table */
     } two;
@@ -194,7 +194,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int l2size,	/* level-2 table size */
 	     unsigned int meta_size,	/* meta predictor table size */
 	     unsigned int shift_width,	/* history register width */
-	     unsigned int xor,		/* history xor address flag */
+	     unsigned int index_type,		/* history xor address flag */
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
 	     unsigned int retstack_size);/* num entries in ret-addr stack */
@@ -206,7 +206,7 @@ bpred_dir_create (
   unsigned int l1size,		/* level-1 table size */
   unsigned int l2size,		/* level-2 table size (if relevant) */
   unsigned int shift_width,	/* history register width */
-  unsigned int xor);	   	/* history xor address flag */
+  unsigned int index_type);	   	/* history xor address flag */
 
 /* print branch predictor configuration */
 void
