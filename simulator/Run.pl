@@ -31,8 +31,7 @@
 
 ###########################################################################
 ## hpux/linux/NT specific settings go up here
-use Cwd 'abs_path';
-$exp_dir = abs_path();
+$exp_dir = "/u/zeshan/simulator";
 $bench_dir = "$exp_dir/bench";
 $input_dir = "$exp_dir/input/ref";
 $output_dir = "$exp_dir/output/ref";
