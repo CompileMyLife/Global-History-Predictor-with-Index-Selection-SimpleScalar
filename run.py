@@ -2,6 +2,7 @@
 
 import os
 import subprocess as subp
+import re
 from typing import List, Dict
 
 PATH = os.getcwd()
@@ -19,6 +20,25 @@ def log_command_and_output(cmd: str, stdout: str, stderr: str, log_filename: str
         log_file.write(f"Standard Output:\n{stdout}\n")
         log_file.write(f"Standard Error:\n{stderr}\n")
         log_file.write("=" * 80 + "\n")
+
+def setup () -> None:
+    pattrn = r'\$exp_dir\s=\s.*?;'
+    path   = f'$exp_dir = "{PATH}/simulator";'
+
+    f_handle = open(os.path.join(PATH, 'simulator', 'Run.pl'), 'r')
+    content = f_handle.read()
+    f_handle.close()
+
+    # CHECK if already set correctly as path var
+    if path in content:
+        print('run.py:setup(): path already set correctly in Run.pl')
+
+    else:
+        content = re.sub(pattrn, path, content)
+
+        f_handle = open(os.path.join(PATH, 'simulator', 'Run.pl'), 'w')
+        f_handle.write(content)
+        f_handle.close()
 
 
 def run() -> None:
@@ -40,6 +60,7 @@ def run() -> None:
 
 def main() -> None:
     os.makedirs('logs', exist_ok=True)  # creates the logs directory, if it already exists do nothing.
+    setup()
     run()
 
 
