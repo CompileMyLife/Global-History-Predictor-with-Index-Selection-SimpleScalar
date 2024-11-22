@@ -10,7 +10,9 @@ PATH = os.getcwd()
 cmds = [
     f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred bimod -bpred:bimod 2048 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_bimod.out',
     f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 1024 8 1 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_gshare.out',
-    f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 1024 8 2 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_gselect.out'
+    f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 1024 8 2 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_gselect.out',
+    f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:2lev 1 1024 8 1 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_comb_gshare.out',
+    f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/gcc1 -benchmark gcc -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:2lev 1 1024 8 2 -fastfwd 5000000 -max:inst 5000000" >& {PATH}/simulator/results/gcc1_comb_gselect.out'
         ]
 
 

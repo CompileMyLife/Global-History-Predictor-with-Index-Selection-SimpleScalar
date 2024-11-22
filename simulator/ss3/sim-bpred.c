@@ -87,10 +87,10 @@ static int bimod_nelt = 1;
 static int bimod_config[1] =
   { /* bimod tbl size */2048 };
 
-/* 2-level predictor config (<l1size> <l2size> <hist_size> <xor>) */
+/* 2-level predictor config (<l1size> <l2size> <hist_size> <index_type>) */
 static int twolev_nelt = 4;
 static int twolev_config[4] =
-  { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
+  { /* l1size */1, /* l2size */1024, /* hist */8, /* index_type */FALSE};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -130,13 +130,17 @@ sim_reg_options(struct opt_odb_t *odb)
 "      N   # entries in first level (# of shift register(s))\n"
 "      W   width of shift register(s)\n"
 "      M   # entries in 2nd level (# of counters, or other FSM)\n"
-"      X   (yes-1/no-0) xor history and address for 2nd level index\n"
+"      X   (concat-2/xor-1/no-0) (concatenate history and address for 2nd level index) / (xor history and address for 2nd level index)\n"
+"\n"
+"   NOTE: For the X configuration, 3 is ignored\n"
+"\n"
 "    Sample predictors:\n"
 "      GAg     : 1, W, 2^W, 0\n"
 "      GAp     : 1, W, M (M > 2^W), 0\n"
 "      PAg     : N, W, 2^W, 0\n"
 "      PAp     : N, W, M (M == 2^(N+W)), 0\n"
 "      gshare  : 1, W, 2^W, 1\n"
+"      gselect : 1, W, 2^W, 2\n"
 "  Predictor `comb' combines a bimodal and a 2-level predictor.\n"
                );
 
@@ -158,7 +162,7 @@ sim_reg_options(struct opt_odb_t *odb)
 
   opt_reg_int_list(odb, "-bpred:2lev",
                    "2-level predictor config "
-		   "(<l1size> <l2size> <hist_size> <xor>)",
+		   "(<l1size> <l2size> <hist_size> <index_type>)",
                    twolev_config, twolev_nelt, &twolev_nelt,
 		   /* default */twolev_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
@@ -209,7 +213,7 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
 			  /* 2lev l2 size */0,
 			  /* meta table size */0,
 			  /* history reg size */0,
-			  /* history xor address */0,
+			  /* history index_type address */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -218,7 +222,7 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
     {
       /* 2-level adaptive predictor, bpred_create() checks args */
       if (twolev_nelt != 4)
-	fatal("bad 2-level pred config (<l1size> <l2size> <hist_size> <xor>)");
+	fatal("bad 2-level pred config (<l1size> <l2size> <hist_size> <index_type>)");
       if (btb_nelt != 2)
 	fatal("bad btb config (<num_sets> <associativity>)");
 
@@ -228,7 +232,7 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
 			  /* 2lev l2 size */twolev_config[1],
 			  /* meta table size */0,
 			  /* history reg size */twolev_config[2],
-			  /* history xor address */twolev_config[3],
+			  /* history index_type address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -237,7 +241,7 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
     {
       /* combining predictor, bpred_create() checks args */
       if (twolev_nelt != 4)
-	fatal("bad 2-level pred config (<l1size> <l2size> <hist_size> <xor>)");
+	fatal("bad 2-level pred config (<l1size> <l2size> <hist_size> <index_type>)");
       if (bimod_nelt != 1)
 	fatal("bad bimod predictor config (<table_size>)");
       if (comb_nelt != 1)
@@ -251,7 +255,7 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
 			  /* l2 size */twolev_config[1],
 			  /* meta table size */comb_config[0],
 			  /* history reg size */twolev_config[2],
-			  /* history xor address */twolev_config[3],
+			  /* history index_type  address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
