@@ -453,6 +453,8 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
         return
 
     predictors = ['taken', 'nottaken']
+
+    # Perfrmance of Taken or Not Taken per benchmark
     taken_bpred_gcc_acc = perf_data['taken']['gcc']['bpred_dir_rate']
     taken_bpred_li_acc = perf_data['taken']['li']['bpred_dir_rate']
 
@@ -461,20 +463,38 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
 
     fig, ax = plt.subplots()
 
-    ax.barh('gcc', taken_bpred_gcc_acc, height=0.25, label='taken', color='lightgray')
-    ax.barh('li', taken_bpred_li_acc, height=0.25, label='taken', color='lightgray')
-    ax.barh('gcc', nottaken_bpred_gcc_acc, height=0.25, label='nottaken', color='darkgray')
-    ax.barh('li', nottaken_bpred_li_acc, height=0.25, label='nottaken', color='darkgray')
-    ax.set_yticks(range(len(benchmarks)), benchmarks)
-    ax.set_xlabel('Branch Prediction Accuracy (%)')
-    ax.set_title('Taken and Not Taken Peformance by Benchmark')
-    ax.xaxis.grid(True)
-    ax.legend()
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+
+    ax.bar(predictors, [taken_bpred_gcc_acc, nottaken_bpred_gcc_acc], width=0.25, align='center')
+    ax.set_xticks(range(len(predictors)))
+    ax.set_xlabel('Branch Predictors')
+    ax.set_xticklabels(predictors)
+    ax.set_ylabel('Branch Prediction Accuracy (%)')
+    ax.set_title('Taken and Not Taken Peformance by gcc')
+    ax.yaxis.grid(True)
 
     plt.tight_layout()
-    plt.savefig(f'{PATH}/logs/taken_nottaken_perf_by_bench.png')
-    
+    plt.savefig(f'{PATH}/logs/taken_nottaken_perf_by_gcc.png')
 
+    fig, ax = plt.subplots()
+
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+
+    ax.bar(predictors, [taken_bpred_li_acc, nottaken_bpred_li_acc], width=0.25, align='center')
+    ax.set_xticks(range(len(predictors)))
+    ax.set_ylabel('Branch Prediction Accuracy (%)')
+    ax.set_xlabel('Branch Predictors')
+    ax.set_xticklabels(predictors)
+    ax.set_title('Taken and Not Taken Peformance by li')
+    ax.yaxis.grid(True)
+
+    plt.tight_layout()
+    plt.savefig(f'{PATH}/logs/taken_nottaken_perf_by_li.png')
+
+
+    # Find the averaged accuracy for each bpred per benchmark
     bimod_bpred_gcc_dir_hits = [perf_data['bimod']['gcc'][size]['bpred_dir_hits'] for size in sizes]
     bimod_bpred_gcc_updates = [perf_data['bimod']['gcc'][size]['bpred_updates'] for size in sizes]
     bimod_bpred_avg_gcc_acc = sum(bimod_bpred_gcc_dir_hits) / sum(bimod_bpred_gcc_updates)
@@ -515,39 +535,59 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     comb_bimod_gselect_bpred_li_updates = [perf_data['comb_bimod_gselect']['li'][size]['bpred_updates'] for size in sizes]
     comb_bimod_gselect_bpred_avg_li_acc = sum(comb_bimod_gselect_bpred_li_dir_hits) / sum(comb_bimod_gselect_bpred_li_updates)
 
-    fig, ax = plt.subplots()
 
     bar_width = 0.10
-    y_pos = range(len(benchmarks))
+    
+    bpreds = ['bimod', 'gselect', 'gshare', 'comb_bimod_gselect', 'comb_bimod_gshare']
 
-    ax.barh(y_pos + 5, bimod_bpred_avg_gcc_acc, height=bar_width, label='bimod', color='k')
-    ax.barh(y_pos - 5, bimod_bpred_avg_li_acc, height=bar_width, label='bimod', color='k')
-    ax.barh(y_pos + 4, gselect_bpred_avg_gcc_acc, height=bar_width, label='gselect', color='r')
-    ax.barh(y_pos - 4, gselect_bpred_avg_li_acc, height=bar_width, label='gselect', color='r')
-    ax.barh(y_pos + 3, gshare_bpred_avg_gcc_acc, height=bar_width, label='gshare', color='c')
-    ax.barh(y_pos - 3, gshare_bpred_avg_li_acc, height=bar_width, label='gshare', color='c')
-    ax.barh(y_pos + 2, comb_bimod_gselect_bpred_avg_gcc_acc, height=bar_width, label='comb_bimod_gselect', color='m')
-    ax.barh(y_pos - 2, comb_bimod_gselect_bpred_avg_li_acc, height=bar_width, label='comb_bimod_gselect', color='m')
-    ax.barh(y_pos + 1, comb_bimod_gshare_bpred_avg_gcc_acc, height=bar_width, label='comb_bimod_gshare', color='b')
-    ax.barh(y_pos - 1, comb_bimod_gshare_bpred_avg_li_acc, height=bar_width, label='comb_bimod_gshare', color='b')
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(benchmarks)
-    ax.set_xlabel('Branch Prediction Accuracy (%)')
-    ax.set_title('Predictors Peformance by Benchmark')
-    ax.xaxis.grid(True)
-    ax.legend()
+    # List of each averaged bpred per benchmark
+    gcc_bpred = [bimod_bpred_avg_gcc_acc, gselect_bpred_avg_gcc_acc, gshare_bpred_avg_gcc_acc, comb_bimod_gselect_bpred_avg_gcc_acc, comb_bimod_gshare_bpred_avg_gcc_acc]
+    li_bpred = [bimod_bpred_avg_li_acc, gselect_bpred_avg_li_acc, gshare_bpred_avg_li_acc, comb_bimod_gselect_bpred_avg_li_acc, comb_bimod_gshare_bpred_avg_li_acc]
+
+    fig, ax = plt.subplots()
+
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+    
+    ax.bar(bpreds, gcc_bpred, width=bar_width, align='center')
+    ax.set_ylabel('Branch Prediction Accuracy (%)')
+    ax.set_xlabel('Branch Predictors')
+    ax.set_xticks(range(len(bpreds)))
+    ax.set_xticklabels(bpreds)
+    ax.set_title('Average Performance using gcc')
+    ax.yaxis.grid(True)
 
     plt.tight_layout()
-    plt.savefig(f'{PATH}/logs/avg_perf_by_bench.png')
+    plt.savefig(f'{PATH}/logs/avg_gcc_perf.png')
+
+    fig, ax = plt.subplots()
+
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+
+    ax.bar(bpreds, li_bpred, width=bar_width, align='center')
+    ax.set_ylabel('Branch Prediction Accuracy (%)')
+    ax.set_xlabel('Branch Predictors')
+    ax.set_xticks(range(len(bpreds)))
+    ax.set_xticklabels(bpreds)
+    ax.set_title('Average Performance using li')
+    ax.yaxis.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(f'{PATH}/logs/avg_li_perf.png')
 
 
+    # Averaged accuracies for Taken and Not Taken
     taken_bpred_acc = performance_data['taken']['bpred_dir_rate']
     nottaken_bpred_acc = performance_data['nottaken']['bpred_dir_rate']
 
 
     fig, ax = plt.subplots()
 
-    ax.bar(range(len(predictors)), [taken_bpred_acc, nottaken_bpred_acc], align='center')
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+
+    ax.bar(range(len(predictors)), [taken_bpred_acc, nottaken_bpred_acc], width=0.25, align='center')
     ax.set_ylabel('Branch Prediction Accuracy (%)')
     ax.set_xlabel('Branch Predictors')
     ax.set_xticks(range(len(predictors)))
@@ -558,6 +598,7 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     plt.tight_layout()
     plt.savefig(f'{PATH}/logs/taken_nottaken_avg_perf.png')
 
+    # Create a list of averaged accuracies for each bpred for all sizes
     bimod_bpred_acc = [performance_data['bimod'][size]['bpred_dir_rate'] for size in sizes]
     gselect_bpred_acc = [performance_data['gselect'][size]['bpred_dir_rate'] for size in sizes]
     gshare_bpred_acc = [performance_data['gshare'][size]['bpred_dir_rate'] for size in sizes]
@@ -566,6 +607,9 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     comb_bimod_gselect_bpred_acc = [performance_data['comb_bimod_gselect'][size]['bpred_dir_rate'] for size in sizes]
 
     fig, ax = plt.subplots()
+
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
 
     ax.plot(sizes, bimod_bpred_acc, label='bimod', linewidth=0.8, color='k', marker='^')
     ax.plot(sizes, gselect_bpred_acc, label='gselect', linewidth=0.8, color='r', marker='o')
@@ -581,22 +625,27 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     plt.tight_layout()
     plt.savefig(f'{PATH}/logs/avg_accuracy_perf.png')
 
+    # IPC for Taken and Not Taken
     taken_bpred_ipc = performance_data['taken']['IPC']
     nottaken_bpred_ipc = performance_data['nottaken']['IPC']
 
     fig, ax = plt.subplots()
 
-    ax.bar(range(len(predictors)), [taken_bpred_ipc, nottaken_bpred_ipc], align='center')
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
+
+    ax.bar(range(len(predictors)), [taken_bpred_ipc, nottaken_bpred_ipc], width=0.25, align='center')
     ax.set_ylabel('IPC')
     ax.set_xlabel('Branch Predictors')
     ax.set_xticks(range(len(predictors)))
     ax.set_xticklabels(predictors)
     ax.set_title('Taken and Not Taken Average IPC over Benchmarks')
     ax.yaxis.grid(True)
-
+    
     plt.tight_layout()
     plt.savefig(f'{PATH}/logs/taken_nottaken_avg_ipc_perf.png')
 
+    # Create list of IPC of each bpred for all sizes in order
     bimod_bpred_ipc = [performance_data['bimod'][size]['IPC'] for size in sizes]
     gselect_bpred_ipc = [performance_data['gselect'][size]['IPC'] for size in sizes]
     gshare_bpred_ipc = [performance_data['gshare'][size]['IPC'] for size in sizes]
@@ -605,6 +654,9 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     comb_bimod_gselect_bpred_ipc = [performance_data['comb_bimod_gselect'][size]['IPC'] for size in sizes]
 
     fig, ax = plt.subplots()
+
+    fig.set_figheight(10)
+    fig.set_figwidth(12)
 
     ax.plot(sizes, bimod_bpred_ipc, label='bimod', linewidth=0.8, color='k', marker='^')
     ax.plot(sizes, gselect_bpred_ipc, label='gselect', linewidth=0.8, color='r', marker='o')
@@ -621,21 +673,24 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
     plt.savefig(f'{PATH}/logs/avg_ipc_perf.png')
 
 def main() -> None:
+    # Create if it does not exist
     os.makedirs(f'{PATH}/logs', exist_ok=True)
 
     # Set the Run.pl to specified paths
     setup()
 
+    # Initialize perf_data
     init()
 
     # Run simulation commands
-    #run_simulations()
+    run_simulations()
 
     # Parse performance data
     results_dir = f'{PATH}/simulator/results'
     performance_avg_data = parse_performance_data(results_dir)
     
     plot_performance(performance_avg_data)
+
 
 if __name__ == '__main__':
     main()
