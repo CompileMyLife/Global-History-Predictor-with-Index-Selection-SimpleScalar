@@ -141,8 +141,9 @@ def setup_logger(fpath: str) -> None:
 def init() -> None:
     print('init(): Initializing perf_data...')
 
+    # Loop through benchmarks
     for benchmark in benchmarks:
-
+        # Initialization
         perf_data['taken'].update({benchmark : {}})
         perf_data['taken'][benchmark].update({
                 'IPC': 0.0,
@@ -165,6 +166,7 @@ def init() -> None:
                 'bpred_dir_rate': 0.0
                 })
 
+        # Initialize bpred keys with a subset dictionary 
         perf_data['bimod'].update({benchmark : {}})
 
         perf_data['gshare'].update({benchmark : {}})
@@ -176,6 +178,7 @@ def init() -> None:
         perf_data['comb_bimod_gselect'].update({benchmark : {}})
 
 
+        # Loop through sizes
         for size in sizes:
 
             perf_data['bimod'][benchmark].update({
@@ -235,26 +238,33 @@ def init() -> None:
 
 
 def simulation(cmd: str, log_file: str) -> None:
+    # Setup the logging file given
     setup_logger(log_file)
     log.info(f'Executing {cmd}')
 
+    # Execute the cmd given
     try:
         process = subp.run(cmd, shell=True, stdout=subp.PIPE, stderr=subp.PIPE)
 
+        # CHECK cmd executed sucessfully or not
         if process.returncode != 0:
-            log.err(f'{process.stderr}')
+            log.error(f'{process.stderr}')
 
         else:
             log.info(f'Finished executing {cmd}\n{process.stdout}')
 
     except Exception as e:
-        log.err(f'{e}')
+        log.error(f'{e}')
 
 
 def run_process_pool(cmds: List[str], logs: List[str]) -> None:
     t_start = perf_counter()
+
+    # Start pool with however many cores available on CPU
     with Pool() as pool:
+        # Give workers simulation(cmds,logs) and finished in any order
         pool.starmap(simulation, zip(cmds, logs)) 
+
     t_end = perf_counter()
     t_duration = t_end - t_start
     print(f'Simulation Batch Duration: {t_duration:.2f}s')
@@ -273,10 +283,10 @@ def run_simulations() -> None:
         taken_log_file = os.path.join(PATH, 'logs', f'{benchmark}_taken')
 
         # Out of Order Not Taken
-        cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}0 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred nottaken -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_nottaken.out')
+        cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}0 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred nottaken -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_nottaken.out 2>&1')
 
         # Out of Order Taken
-        cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}1 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred taken -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_taken.out')
+        cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}1 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred taken -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_taken.out 2>&1')
 
         log_file_paths = [
                 nottaken_log_file, 
@@ -284,6 +294,7 @@ def run_simulations() -> None:
                 ]
 
         t_start = perf_counter()
+
         run_process_pool(cmd_template, log_file_paths)
 
         # Loop through the sizes
@@ -291,6 +302,7 @@ def run_simulations() -> None:
             # Bimodal Branch Predictor
             bimod_log_file = os.path.join(PATH, 'logs', f'{benchmark}_bimod_{size}')
 
+            # Calculate shift register width and subtract three due to PC 3 LSBs
             shift_reg_width = str(int(log2(int(size)) - 3))
 
             # gshare Branch Predictor
@@ -314,25 +326,25 @@ def run_simulations() -> None:
                     comb_bimod_gselect_log_file
                     ]
 
+            # Clear previous entries
             cmd_template.clear()
 
             # Out of Order Bimodal
-            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}3 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred bimod -bpred:bimod {size} -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_bimod_{size}.out')
+            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}3 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred bimod -bpred:bimod {size} -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_bimod_{size}.out 2>&1')
 
             # Out of Order gshare
-            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}4 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 {size} {shift_reg_width} 1 -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_gshare_{size}_{shift_reg_width}.out')
+            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}4 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 {size} {shift_reg_width} 1 -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_gshare_{size}_{shift_reg_width}.out 2>&1')
 
             # Out of Order gselect
-            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}5 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 {size} {shift_reg_width} 2 -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_gselect_{size}_{shift_reg_width}.out')
+            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}5 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 {size} {shift_reg_width} 2 -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_gselect_{size}_{shift_reg_width}.out 2>&1')
 
-
-            # May not use these as part of data set since this is not in the scope just for show
-            ##################################################################################
             # Out of Order Bimodal-gshare
-            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}6 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:bimod {size} -bpred:2lev 1 {size} {shift_reg_width} 1 -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_comb_bimod_gshare_{size}_{shift_reg_width}.out')
-            # Out of Order Bimodal-gselect
-            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}7 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:bimod {size} -bpred:2lev 1 {size} {shift_reg_width} 2 -fastfwd 10000000 -max:inst 10000000" >& {PATH}/simulator/results/{benchmark}_comb_bimod_gselect_{size}_{shift_reg_width}.out')
+            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}6 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:bimod {size} -bpred:2lev 1 {size} {shift_reg_width} 1 -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_comb_bimod_gshare_{size}_{shift_reg_width}.out 2>&1')
 
+            # Out of Order Bimodal-gselect
+            cmd_template.append(f'{PATH}/simulator/Run.pl -db {PATH}/simulator/bench.db -dir {PATH}/simulator/results/{benchmark}7 -benchmark {benchmark} -sim {PATH}/simulator/ss3/sim-outorder -args "-bpred comb -bpred:bimod {size} -bpred:2lev 1 {size} {shift_reg_width} 2 -fastfwd 10000000 -max:inst 10000000" > {PATH}/simulator/results/{benchmark}_comb_bimod_gselect_{size}_{shift_reg_width}.out 2>&1')
+
+            # Run batch with cmds and log files paths setup
             run_process_pool(cmd_template, log_file_paths)
             
         t_end = perf_counter()
@@ -353,6 +365,7 @@ def parse(file_path: str, bpred: str, benchmark: str, size: Optional[str] = None
     for metric, pattrn in perf_pattrns.items():
         match = re.search(pattrn, content)
 
+        # CHECK match and which bpred_type
         if match and bpred_type == 0:
             perf_data[bpred][benchmark][metric] = float(match.group(1))
 
@@ -376,11 +389,14 @@ def parse_performance_data(results_dir: str) -> Dict[str, float]:
             'comb_bimod_gselect': {}
             }
 
+    # Store in list all 'files' only and ignore directories
     files = [f for f in os.listdir(results_dir) if os.path.isfile(os.path.join(results_dir, f))]
 
+    # Loop through filenames
     for filename in files:
         file_path = os.path.join(results_dir, filename) 
         
+        # Parse out which bpred, benchmark, size if it exists from filename
         bpred = re.search(r'^[a-z]+_([^\d]+)(?:_\d+.+?|\.out)', filename).group(1)
         benchmark = re.search(r'^([a-z]+)_.+\.out$',filename).group(1)
         size_match = re.search(r'^[a-z]+_.+?_(\d+)(?:_\d+)?\.out', filename)
@@ -389,24 +405,41 @@ def parse_performance_data(results_dir: str) -> Dict[str, float]:
         parse(file_path, bpred, benchmark, size)
 
 
+    # Loop through bpreds from global performance data
     for bpred in perf_data.keys():
+        # Loop through benchmarks for a bpred
         for benchmark in perf_data[bpred].keys():
+            # CHECK which type of bpreds
             if bpred in ('taken', 'nottaken'):
+                # Loop through all metric and values for a bpred and benchmark
                 for metric, val in perf_data[bpred][benchmark].items():
+                    # CHECK metric does not exist in the perf_avg_data bpred dictionary
                     if metric not in perf_avg_data[bpred].keys():
+                        # Create the metric entry with a list
                         perf_avg_data[bpred].update({
                             metric : []
                             })
+
+                    # Append to end of list
                     perf_avg_data[bpred][metric].append(val)
             else:
+                # Loop through sizes for a bpred and benchmark
                 for size in perf_data[bpred][benchmark].keys():
+                    # CHECK size does not exist in perf_avg_data bpred dictionary
                     if size not in perf_avg_data[bpred]:
+                        # Create the size entry
                         perf_avg_data[bpred].update({size:{}})
+
+                    # Loop through all metric and values for a brped, benchmark, and size
                     for metric, val in perf_data[bpred][benchmark][size].items():
+                        # CHECK metric does not exist in the perf_avg_data bpred size dictionary
                         if metric not in perf_avg_data[bpred][size].keys():
+                            # Create the metric entry with a list
                             perf_avg_data[bpred][size].update({
                                 metric: [] 
                                 })
+
+                        # Append to end of list
                         perf_avg_data[bpred][size][metric].append(val)
 
     # Calculate average
@@ -675,6 +708,9 @@ def plot_performance(performance_data: Dict[str, float]) -> None:
 def main() -> None:
     # Create if it does not exist
     os.makedirs(f'{PATH}/logs', exist_ok=True)
+
+    # Create if it does not exist
+    os.makedirs(f'{PATH}/simulator/results', exist_ok=True)
 
     # Set the Run.pl to specified paths
     setup()
