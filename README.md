@@ -20,6 +20,7 @@ The benchmarks that closely followed McFarling's paper that was available for th
 * gcc
 * tomcatv
 * fpppp
+
 **NOTE**: fpppp took too long to run to show in our demo and tomcatv did not work unfortunately. These two benchmarks were excluded in our anaylsis. If more time was given for the project. Then can look in to including these benchmarks.
 ## Reference
 * [WRL Technical Note TN-36:Combining Branch Predictors](docs/WRL_Technical_Note_TN-36_Combining-Branch-Predictors_Mcfarling.pdf), Scott McFarling, 1993
