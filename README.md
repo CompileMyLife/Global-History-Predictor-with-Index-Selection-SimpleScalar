@@ -1,7 +1,7 @@
 # Global History Predictor with Index Selection in SimpleScalar
 An implementation of `gselect` branch predictor for the SimpleScalar simulator.
 ## Features
-A cost effective (in terms of footprint) global branch predictor that competes with its counterpart `gshare`. The benchmark analysis is automated by the `run.py` script under Debian Linux machines. However some setup is required to allow this to work.
+A cost effective (in terms of footprint) global branch predictor that competes with its counterpart `gshare`. The benchmark analysis is automated by the `run.py` script under Debian Linux machines. Please refer to the documents found in `docs/` for more information. Some setup is required to run the simulator.
 ## How To
 The library modules are defined in the `requirements.txt`. To get started, setup your environment:
 ```console
@@ -24,3 +24,5 @@ The benchmarks that closely followed McFarling's paper that was available for th
 ## Reference
 * [WRL Technical Note TN-36:Combining Branch Predictors](docs/WRL_Technical_Note_TN-36_Combining-Branch-Predictors_Mcfarling.pdf), Scott McFarling, 1993
 * [SimpleScalar Simulator](https://github.com/toddmaustin/simplesim-3.0)
+## License
+Please refer to the MIT license attached to this repository. We do not own SimpleScalar simulator. It was used only for the purpose for academic research and to further our understanding.
